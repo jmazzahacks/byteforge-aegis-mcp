@@ -1,0 +1,18 @@
+services:
+  byteforge-aegis-mcp:
+    image: ghcr.io/jmazzahacks/byteforge-aegis-mcp:latest
+    container_name: byteforge-aegis-mcp
+    restart: unless-stopped
+    # No host port published: nginx reaches this by container name on the
+    # shared docker network, and the master key means it should never be
+    # exposed directly to the host.
+    expose:
+      - "8000"
+    environment:
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
+      FASTMCP_HOST: 0.0.0.0
+      FASTMCP_PORT: 8000
+      AEGIS_API_URL: ${AEGIS_API_URL}
+      AEGIS_MASTER_API_KEY: ${AEGIS_MASTER_API_KEY}

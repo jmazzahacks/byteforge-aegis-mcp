@@ -1,0 +1,11 @@
+# Bounded to <2.0 — the mcp 2.0 rewrite (2026-07-28) renames FastMCP to
+# MCPServer and moves mcp.server.fastmcp to mcp.server.mcpserver. Unbounding
+# without migrating this server's imports builds green against an existing
+# 1.x venv and crash-loops on the first --no-cache rebuild.
+mcp>=1.3,<2.0
+requests>=2.28.0
+
+# Public repos, so these need no CR_PAT at install time. Pinned to tags
+# rather than floating: this image is rebuilt rarely and a silent client
+# bump is not worth the surprise.
+byteforge-aegis-client-python @ git+https://github.com/jmazzahacks/byteforge-aegis-client-python.git@v3.2.0

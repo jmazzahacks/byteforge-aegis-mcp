@@ -1,0 +1,15 @@
+VERSION
+.env
+bin/
+.venv/
+lib/
+lib64/
+include/
+pyvenv.cfg
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Build internals stay out of the public repo, matching byteforge-aegis.
+build-publish.sh
+.dockerignore

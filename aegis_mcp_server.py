@@ -34,7 +34,6 @@ import os
 import uuid as uuid_module
 from typing import Any, Dict, List, Optional
 
-import requests
 from byteforge_aegis_client import AegisClient, AegisClientConfig
 from byteforge_aegis_client.exceptions import AegisError
 from byteforge_aegis_models import Site
@@ -56,8 +55,6 @@ mcp = FastMCP(
     port=int(os.getenv("FASTMCP_PORT", os.getenv("MCP_PORT", "8000"))),
     stateless_http=True,
 )
-
-HTTP_TIMEOUT_SECONDS = 15
 
 
 def _api_url() -> str:
@@ -122,19 +119,26 @@ def _sites_to_admin_dicts(sites: List[Site]) -> List[Dict[str, Any]]:
 def aegis_health() -> str:
     """Report the Aegis backend's health and deployed version.
 
-    Returns the raw /api/health body, which carries the running version (e.g.
+    Returns the /api/health body, which carries the running version (e.g.
     {"status": "healthy", "service": "auth-service", "version": "68"}). Use
     this to confirm which build is live before reasoning about
     version-dependent behaviour.
+
+    Needs no credentials, so it also works as a plain "is the backend up?"
+    check when the master key is missing or wrong.
     """
-    # Deliberately not client.health_check(): the HealthStatus model parses
-    # only `status` and discards `service` and `version`, and the version is
-    # the entire reason to call this. Raw GET until that model is widened.
+    # This went through a raw GET until models 2.8.0, because HealthStatus
+    # parsed only `status` and discarded `service` and `version` — and the
+    # version is the entire reason to call this. The model carries all three
+    # now, so the client is the right path again.
+    #
+    # No master key is needed here: /api/health is unauthenticated. Building
+    # the client anyway would make this tool fail whenever the key is absent,
+    # which is exactly when you most want to ask whether the backend is up.
     try:
-        response = requests.get(f"{_api_url()}/api/health", timeout=HTTP_TIMEOUT_SECONDS)
-        response.raise_for_status()
-        return _ok(response.json())
-    except (requests.RequestException, ValueError, RuntimeError) as e:
+        config = AegisClientConfig(api_url=_api_url())
+        return _ok(AegisClient(config).health_check().to_dict())
+    except (AegisError, RuntimeError) as e:
         return f"ERROR: health check failed: {e}"
 
 
